@@ -166,6 +166,14 @@ class PybulletEnv:
         set_pose(body, Pose(point=[x, y, z], euler=np.array([theta, 0, 0])))
         self._objects[name] = body
         self.theta_dict[name] = 0
+        if name == 'red_box':
+            p.addUserDebugText('remote', textPosition = [x,y,1.05*z], textSize=1.4, textColorRGB=[1, 1, 1], lifeTime=0)
+        if name == 'blue_box':
+            p.addUserDebugText('spoon', textPosition = [x,y,1.05*z], textSize=1.4, textColorRGB=[1, 1, 1], lifeTime=0)
+        if name == 'green_box':
+            p.addUserDebugText('cup', textPosition = [x,y,1.05*z], textSize=1.4, textColorRGB=[1, 1, 1], lifeTime=0)
+        if name == 'tan_box':
+            p.addUserDebugText('phone', textPosition = [x,y,1.05*z], textSize=1.4, textColorRGB=[1, 1, 1], lifeTime=0)
 
     def create_box(self, name, color, x, y, z, theta=np.pi):
         box_body = create_obj(BOX_PATH, scale=0.5, color=color, mass=1.0)

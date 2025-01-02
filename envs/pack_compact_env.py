@@ -247,6 +247,11 @@ class PackCompactEnv(PybulletEnv):
                         "z": 0.06,
                     }
 
+                    if box_name == 'green_box':
+                        box_info['x'], box_info['y'], box_info['z'] = 0.39, 0.14, 0.04
+                    if box_name == 'tan_box':
+                        box_info['x'], box_info['y'], box_info['z'] = 0.39, 0.14, 0.08
+
                     boxes_info[box_i] = box_info
 
                 instance = {"basket": basket_info, "boxes": boxes_info}
