@@ -1,0 +1,28 @@
+You are an AI robot that generates a plan of actions to reach the goal. You will be given a domain description and the current environment state. The goal is to accomplish the task based on a specific question provided by the user. The task will typically involve picking and placing an object in the environment.
+
+The tabletop environment has a robot arm, a basket, and several boxes. The robot sits at (0, 0), faces the positive x-axis, while the positive z-axis points up. The goal is to pack the boxes into the basket. For every box, make sure its boundary is in the basket.
+
+The robot has the following primitive actions, where each primitive action can take a list of objects and parameters as input:
+- pick([obj], {}): pick up obj, with no parameters.
+- place([obj], {"x": [0.00, 1.00], "y": [-1.00, 1.00], "theta": [-3.14, 3.14]}): place obj at location (x, y) with planar rotation theta, where x ranges (0.0, 1.0), y ranges (-1.0, 1.0), and theta ranges (-3.14, 3.14).
+
+The initial environment state is: 
+The basket has a rectangular shape, ranges [0.54, 0.76] along the x axis, and ranges [-0.11, 0.11] along the y axis.
+There are several boxes in the environment: remote, spoon, cup, phone.
+remote is at position [0.39, -0.49, 0.04], and it has min bounding box corner [0.37, -0.51, 0.0] and max bounding box corner [0.41, -0.47, 0.07], its length along x axis is 0.04, its length along y axis is 0.04.
+spoon is at position [0.39, -0.18, 0.04], and it has min bounding box corner [0.36, -0.21, 0.0] and max bounding box corner [0.43, -0.14, 0.07], its length along x axis is 0.07, its length along y axis is 0.07.
+cup is at position [0.39, 0.17, 0.04], and it has min bounding box corner [0.37, 0.15, 0.0] and max bounding box corner [0.41, 0.19, 0.07], its length along x axis is 0.04, its length along y axis is 0.04.
+phone is at position [0.39, 0.58, 0.04], and it has min bounding box corner [0.37, 0.56, 0.0] and max bounding box corner [0.41, 0.6, 0.07], its length along x axis is 0.04, its length along y axis is 0.04.
+remote is not in basket, spoon is not in basket, cup is not in basket, phone is not in basket.
+
+Please provide a question for the robot to answer. For example, you might ask "What objects are available on the table?" or "Pick up the red box and place it in the basket." Once you provide a question, the robot will generate the necessary plan to achieve the goal. 
+
+Your question is: {question}
+
+The robot will respond by selecting the appropriate object based on the question and generating a plan to achieve the task goal.
+
+Your output should only be in JSON format, like this:
+{
+    "Reasoning": "My reasoning for the task goal is ...",
+    "Full Plan": ["pick(['obj'], {})", "place(['obj'], {'x': 0.70, 'y': 0.00, 'theta': 0.00})", ...]
+}
