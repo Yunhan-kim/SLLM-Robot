@@ -155,7 +155,7 @@ class SLLMBase(abc.ABC):
         # self.client = InferenceClient(
         #     "microsoft/Phi-3.5-mini-instruct",
         #     # "mistralai/Mixtral-8x7B-Instruct-v0.1",
-        #     token='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',
+        #     token='HUGGINGFACE_KEYS["key"]',
         # )
 
         genai.configure(api_key = GEMINI_KEYS["key"])
