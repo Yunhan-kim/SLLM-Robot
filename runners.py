@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import pybullet as p
 from envs.pack_compact_env import PackCompactEnv
+from planners.sllm_planner import SLLMPlanner
 from planners.llm_tamp_planner import LLMTAMPPlanner
 from planners.random_param_sampler import RandomParamSampler
 
@@ -11,6 +12,111 @@ from utils.io_util import mkdir, save_npz, dump_json
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
+class SLLMRunner:
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.env_cfg = cfg.env
+        self.planner_cfg = cfg.planner
+
+        # environment
+        self.env = PackCompactEnv()
+        self.primitive_actions = self.env.primitive_actions
+
+        # save dirs
+        self.save_to_file = cfg.save_to_file
+        self.world_dir = Path("envs/task_instances")
+        mkdir(self.world_dir)
+        self.save_dir = Path(cfg.save_dir)
+
+        # planner
+        self.planner = SLLMPlanner(
+            planner_prompt_file=self.planner_cfg.planner_prompt_file,
+            env_desc_file="pack_boxes.txt",
+            primitive_actions=self.primitive_actions,
+            with_mp_feedback=self.planner_cfg.with_mp_feedback,            
+        )
+        self.max_llm_calls = cfg.max_llm_calls
+
+        self.play_traj = cfg.play_traj
+        self.use_gui = cfg.use_gui
+
+        logger.info(f"Run TAMP for setting {cfg.env.env_name}!")
+
+    def run_once(self, task_config):
+        # main loop
+        last_feedback_list = []
+        last_temp_tamp_plan = None        
+        num_mp_calls = 0
+        num_llm_calls = 0
+        for _ in range(self.max_llm_calls):
+            # reset environment
+            obs, obs_text = self.env.reset(**task_config, use_gui=self.use_gui)                        
+            # propose plan with llm (symbolic plan only used when sampling parameters only)
+            plan = self.planner.plan(
+                obs, last_feedback_list, symbolic_plan=self.env.get_symbolic_plan()
+            )
+            last_feedback_list = []  # last feedback
+            num_llm_calls += 1
+
+            # rollout
+            temp_tamp_plan = []
+            same_as_last = True
+            for action_i, action in enumerate(plan):
+                # if same as last, simulate last traj
+                if (
+                    same_as_last
+                    and last_temp_tamp_plan is not None
+                    and len(last_temp_tamp_plan) > action_i
+                ):
+                    if str(action) == str(last_temp_tamp_plan[action_i]):
+                        action = last_temp_tamp_plan[action_i]
+                    else:
+                        same_as_last = False
+
+                # motion planning when no traj
+                if action.traj is None or len(action.traj) == 0:
+                    num_mp_calls += 1
+
+                _, feedback = self.env.step(
+                    action, play_traj=self.play_traj
+                )  # this step will also save traj in action
+                last_feedback_list.append((action, feedback))
+
+                logger.debug(f"Apply action: {action}")
+                logger.debug(f"Succeed: {feedback.action_success}")
+                logger.debug(f"MP feedback: {feedback.motion_planner_feedback}")
+
+                if feedback.action_success:
+                    temp_tamp_plan.append(action)
+                else:
+                    logger.info(f"Action {str(action)} failed!")
+                    break                
+
+            last_temp_tamp_plan = temp_tamp_plan            
+
+        logger.info("Episode ends!")        
+
+        episode_data = {}            
+
+        return episode_data
+
+    def run(self):
+        task_instances = self.env.create_task_instances(
+            self.env_cfg,
+            self.env_cfg.task_instances,            
+            save_to_file=None,
+            instance_file=None,
+            overwrite=self.cfg.overwrite_instances,
+        )        
+
+        for idx, task_config in task_instances.items():
+            # reset planner
+            self.planner.reset()
+
+            _ = self.run_once(task_config)            
+        
+        input("Enter를 눌러 시뮬레이션을 종료하세요.")
 
 class TAMPRunner:
     def __init__(self, cfg):

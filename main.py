@@ -3,10 +3,11 @@ import logging
 from pathlib import Path
 from omegaconf import DictConfig, OmegaConf
 
-from runners import TAMPRunner, RandomSampleRunner
+from runners import TAMPRunner, RandomSampleRunner, SLLMRunner
 from utils.log_util import setup_global_logger
 
 RUNNER = {
+    "sllm": SLLMRunner,
     "tamp": TAMPRunner,
     "random_sample": RandomSampleRunner,
 }
