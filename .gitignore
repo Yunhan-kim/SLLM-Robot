@@ -138,3 +138,8 @@ openai_key.json
 */*/openai_key.json
 
 saved_runs/
+
+gemini_keys/
+gemini_keys.json
+*/gemini_keys.json
+*/*/gemini_keys.json
