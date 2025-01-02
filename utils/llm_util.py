@@ -6,10 +6,15 @@ from retry import retry
 from pathlib import Path
 from utils.io_util import load_json
 from openai import OpenAI
+from huggingface_hub import InferenceClient
+import google.generativeai as genai
 
 
 openai_keys_folder = Path(__file__).resolve().parent.parent / "openai_keys"
 OPENAI_KEYS = load_json(openai_keys_folder / "openai_key.json")
+
+gemini_keys_folder = Path(__file__).resolve().parent.parent / "gemini_keys"
+GEMINI_KEYS = load_json(gemini_keys_folder / "gemini_keys.json")
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +149,47 @@ class LLMBase(abc.ABC):
 
         return llm_output
 
+
+class SLLMBase(abc.ABC):
+    def __init__(self, use_gpt_4: bool, *args, **kwargs):
+        # self.client = InferenceClient(
+        #     "microsoft/Phi-3.5-mini-instruct",
+        #     # "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        #     token='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',
+        # )
+
+        genai.configure(api_key = GEMINI_KEYS["key"])
+        self.model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
+
+    def prompt_llm(self, prompt: str, temperature: float = 0.0, force_json: bool = False):
+        # feed prompt to llm
+        logger.info("\n" + "#" * 50)
+        logger.info(f"Prompt:\n{prompt}")
+
+        # llm_output = ""
+        # output = self.client.chat_completion(
+        #     messages=[{"role": "user", "content": prompt}],
+        #     max_tokens=512, ## Should be checked
+        #     stream=True,
+        # )
+
+        # for message in output:
+        #     print(message.choices[0].delta.content, end="")
+        #     llm_output += message.choices[0].delta.content
+
+        llm_output = self.model.generate_content(prompt).text
+        
+        start_index = llm_output.find('{\n')
+        end_index = llm_output.find('\n}')
+
+        # 텍스트가 존재하는지 확인하고 필터링
+        if start_index != -1 and end_index != -1:
+            llm_output = llm_output[start_index:end_index+2]
+
+        logger.info("\n" + "#" * 50)
+        logger.info(f"LLM output:\n{llm_output}")
+
+        return llm_output
 
 ####################### Convert Formats #####################
 
