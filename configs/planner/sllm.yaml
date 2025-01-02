@@ -1,0 +1,4 @@
+planner_prompt_file: sllm
+
+trace_size: 5
+with_mp_feedback: False
